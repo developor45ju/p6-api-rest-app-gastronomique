@@ -14,15 +14,15 @@ mongoose
 
 /**
  * Opens communication with the server and URL http://localhost:4200/
- * @param { express.Request } req
- * @param { express.Response } res
- * @param { express.NextFunction } next
+ * @param { Express.Request } req
+ * @param { Express.Response } res
+ * @param { Express.NextFunction } next
  */
 
 
 app.use(express.json());
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200/');
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, Authorization, X-RequestWith, Content, Accept, Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     next();

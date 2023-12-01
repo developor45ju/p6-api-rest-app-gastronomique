@@ -36,8 +36,8 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
     try {
       const user = await User.findOne({ email: req.body.email });
-      if (!user) return res.status(httpStatus.UNAUTHORIZED, 'Wrong email/password');
-
+      if (!user) return res.status(httpStatus.UNAUTHORIZED).json({message: 'Wrong email/password'});
+      
       const verifPassword = await argon2.verify(user.password, req.body.password);
       if (!verifPassword) return res.status(httpStatus.UNAUTHORIZED).json({ message: 'Wrong email/password' });
 
