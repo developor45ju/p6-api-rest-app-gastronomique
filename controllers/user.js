@@ -1,6 +1,7 @@
 const argon2 = require('argon2');
 const User = require('../models/User.js');
-const httpStatus = require('http-status')
+const httpStatus = require('http-status');
+const jwt = require('jsonwebtoken');
 
 /**
  * Creates user
@@ -26,3 +27,29 @@ exports.signup = async (req, res) => {
   }
 };
 
+/**
+ * Login user
+ * @param { Express.Request } req 
+ * @param { Express.Response } res 
+ * @returns 
+ */
+exports.login = async (req, res) => {
+    try {
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) return res.status(httpStatus.UNAUTHORIZED, 'Wrong email/password');
+
+      const verifPassword = await argon2.verify(user.password, req.body.password);
+      if (!verifPassword) return res.status(httpStatus.UNAUTHORIZED).json({ message: 'Wrong email/password' });
+
+      const userId = user._id;
+      const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+      return res.status(httpStatus.OK).json({ token, userId });
+    }  catch(error) {
+      console.log(error);
+      return res.status(httpStatus.BAD_REQUEST).json({ message: error });
+    }
+}
