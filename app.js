@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 const userRoutes = require('./routes/user.js');
-const hotsauceRoutes = require('./routes/hotsauce.js');
+const hotsauceRoutes = require('./routes/sauce.js');
 
 mongoose
   .connect(
@@ -23,7 +23,7 @@ mongoose
 
 app.use(express.json());
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, Authorization, X-RequestWith, Content, Accept, Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     next();
