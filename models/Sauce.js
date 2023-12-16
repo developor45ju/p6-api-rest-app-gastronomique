@@ -4,16 +4,16 @@ const strErrorMsg = 'Nous acceptons les lettres suivantes : a Ã  z, -, _, de 5 Ã
 
 const sauceSchema = mongoose.Schema({
     userId: { type: String, required: true },
-    name: { type: String, required: true, match: [strRgx, strErrorMsg] },
-    manufacturer: { type: String, required: true, match: [strRgx, strErrorMsg] },
-    description: { type: String, required: true, match: [strRgx, strErrorMsg] },
-    mainPepper: { type: String, required: true, match: [strRgx, strErrorMsg] },
+    name: { type: String, required: true },
+    manufacturer: { type: String, required: true },
+    description: { type: String, required: true },
+    mainPepper: { type: String, required: true },
     imageUrl: { type: String, required: true },
     heat: { type: Number, required: true },
-    likes: { type: Number },
-    dislikes: { type: Number },
-    userLiked: { type: Array },
-    userDisliked: { type: Array },
+    likes: { type: Number, default: 0 },
+    dislikes: { type: Number, default: 0 },
+    userLiked: { type: [String], default: [] },
+    userDisliked: { type: [String], default: [] },
 });
 
-module.exports = mongoose.model('Hotsauces', sauceSchema)
+module.exports = mongoose.model('Sauce', sauceSchema);
