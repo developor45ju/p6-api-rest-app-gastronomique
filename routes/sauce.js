@@ -8,5 +8,7 @@ const router = express.Router();
 
 router.get('/', auth, sauceCtrl.getAllSauces);
 router.post('/', auth, multer, sauceCtrl.postSauce);
+router.get('/:id', auth, sauceCtrl.getOneSauce);
+
 
 module.exports = router;

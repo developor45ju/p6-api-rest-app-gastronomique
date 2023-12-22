@@ -42,3 +42,19 @@ exports.postSauce = async (req, res) => {
     return res.status(httpStatus.BAD_REQUEST).json({ error });
   }
 }
+
+/**
+ * Get one sauce
+ * @param { Express.Request } - req
+ * @param { Express.Response } - res
+ */
+
+exports.getOneSauce = async (req, res) => {
+  try {
+    const getOneSauce = await Sauce.findOne({ _id: req.params.id });
+    console.log(getOneSauce);
+    return res.status(httpStatus.OK).json(getOneSauce);
+  } catch (error) {
+    return res.status(httpStatus.NOT_FOUND).json({ error });
+  }
+}
