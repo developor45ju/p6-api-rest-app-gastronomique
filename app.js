@@ -17,7 +17,7 @@ mongoose
   .catch((error) => console.log(error));
 
 /**
- * Opens communication with the server and URL http://localhost:4200/
+ * Opens communication with the server
  * @param { Express.Request } req
  * @param { Express.Response } res
  * @param { Express.NextFunction } next
