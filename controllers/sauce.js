@@ -53,7 +53,6 @@ exports.postSauce = async (req, res) => {
 exports.getOneSauce = async (req, res) => {
   try {
     const getOneSauce = await Sauce.findOne({ _id: req.params.id });
-    console.log(getOneSauce);
     return res.status(httpStatus.OK).json(getOneSauce);
   } catch (error) {
     return res.status(httpStatus.NOT_FOUND).json({ error });
@@ -86,12 +85,11 @@ exports.updateSauce = async (req, res) => {
     const sauce = await Sauce.findOne({ _id: req.params.id });
     if (req.file) {
       const imageFile = sauce.imageUrl.split('/images/')[1];
-      console.log(imageFile);
-      fs.unlink(`images/${imageFile}`, async (error) => {
+      fs.unlink(`images/${imageFile}`, (error) => {
         if (error) throw error;
-        const updateSauce = await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
-        return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
       })
+      const updateSauce = await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
+      return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
     } else {
       const updateSauce = await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
       return res.status(httpStatus.OK).json({ message : 'Sauce updatled!' });  
