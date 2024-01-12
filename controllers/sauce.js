@@ -124,37 +124,55 @@ exports.likeSauce = async (req, res) => {
   try {
     const like = req.body.like;
     const sauce = await Sauce.findOne({ _id: req.params.id });
+    if (!sauce) throw new Error('Cette sauce n\'existe pas!');
+    
     const userId = req.auth.userId;
     const userNote = {
-      likes: 0,
-      dislikes: 0,
-      usersLiked: sauce.usersLiked,
+      likes: sauce.liked,
+      dislikes: sauce.dislikes,
+      usersLiked: sauce.usersLiked, 
       usersDisliked: sauce.usersDisliked
     }
+
+    const isEverLiked = userNote.usersLiked.includes(userId);
+    const isEverDisliked = userNote.usersDisliked.includes(userId);
+    const errorMessageUnauthorizedAction = 'Cette action n\'est pas autorisée!';
+    
     switch (like) {
       case 1:
+        if (isEverLiked) throw new Error(errorMessageUnauthorizedAction);
         userNote.usersLiked.push(userId);
         break;
+
       case -1:
+        if (isEverDisliked) throw new Error(errorMessageUnauthorizedAction);
         userNote.usersDisliked.push(userId);
         break;
-      default :
-        if (userNote.usersLiked.includes(userId)) {
+
+      case 0 :
+        if (isEverLiked) {
+          // remove user from usersLiked array
           const index = userNote.usersLiked.indexOf(userId);
           userNote.usersLiked.splice(index, 1);
-        } else {
+        } else if (isEverDisliked) {
+          // remove user from usersDisliked array
           const index = userNote.usersDisliked.indexOf(userId);
           userNote.usersDisliked.splice(index, 1);
+        } else {
+          throw new Error('La sauce n\'a pas été notée par cet utilisateur !');
         }
-    }
+        break;
 
+      default:
+        throw new Error(errorMessageUnauthorizedAction); 
+    }
     
     userNote.likes = userNote.usersLiked.length;
     userNote.dislikes = userNote.usersDisliked.length;
-    console.log(userNote);
     await Sauce.updateOne({ _id: req.params.id }, userNote);
     return res.status(httpStatus.OK).json({ message: 'Sauce noted!' });
   } catch (error) {
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error });
+    console.log(error);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: error?.message });
   }
 }

@@ -11,8 +11,12 @@ module.exports = (req, res, next) => {
         req.auth = {
             userId
         }
+        if (req.auth.userId !== req.body.userId) {
+            console.log(req.auth.userId, ' ≠ ', req.body.userId);
+            throw new Error('L\'utisateur est introuvable');
+        }
         next();
     } catch (error) {
-        res.status(httpStatus.UNAUTHORIZED).json({ error });
+        res.status(httpStatus.UNAUTHORIZED).json({ error: error?.message });
     }
 }
