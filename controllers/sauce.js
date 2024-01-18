@@ -11,15 +11,9 @@ const httpStatus = require('http-status');
 exports.getAllSauces = async (req, res) => {
   try {
     const getAllSauces = await Sauce.find();
-    // [{imageUrl}, {imageUrl}]
-    // getAllSauces.imageUrl = "free100Mo.JPG1703240525241.jpg"
-    // faire une boucle des sauces
-    // Créer une constante qui stock le nom de l'image
-    // Créer une  
-    // getAllSauces.imageUrl = "http://localhost:3000/images/free100Mo.JPG1703240525241.jpg"
     return res.status(httpStatus.OK).json(getAllSauces);
   } catch (error) {
-      return res.status(httpStatus.BAD_REQUEST).json({ error })
+    return res.status(httpStatus.BAD_REQUEST).json({ error })
   }
 }
 
@@ -30,23 +24,33 @@ exports.getAllSauces = async (req, res) => {
  */
 
 exports.postSauce = async (req, res) => {
+  const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   try {
-    const sauceObject = JSON.parse(req.body.sauce);
+    const sauceObject = JSON.parse(req.body.sauce); //req.body.sauce
     delete sauceObject._id;
     delete sauceObject.userId;
     const sauce = new Sauce({
       ...sauceObject,
       userId: req.auth.userId,
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+      imageUrl,
       likes: 0,
       dislikes: 0,
       usersLiked: [],
-      usersDisliked: []
+      usersDisliked: [],
     });
-    
+
     await sauce.save();
+
     return res.status(httpStatus.CREATED).json({ message: 'Object created' });
   } catch (error) {
+    if (req.file) {
+      const imageFile = imageUrl.split('/images/')[1];
+      fs.unlink(`images/${imageFile}`, () => {
+        console.log('Image not uploaded with success');
+      });
+    }
+
+
     return res.status(httpStatus.BAD_REQUEST).json({ error });
   }
 }
@@ -73,10 +77,11 @@ exports.getOneSauce = async (req, res) => {
  */
 
 exports.updateSauce = async (req, res) => {
+  const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
   try {
     const sauceObject = req.file ? {
       ...JSON.parse(req.body.sauce),
-      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+      imageUrl
     } : {
       ...req.body
     }
@@ -94,6 +99,12 @@ exports.updateSauce = async (req, res) => {
       return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
     }
   } catch (error) {
+    if (req.file) {
+      const imageFile = imageUrl.split('/images/')[1];
+      fs.unlink(`images/${imageFile}`, () => {
+        console.log('Image not uploaded with success');
+      });
+    }
     return res.status(httpStatus.BAD_REQUEST).json({ error });
   }
 }
@@ -128,7 +139,7 @@ exports.likeSauce = async (req, res) => {
     
     const userId = req.auth.userId;
     const userNote = {
-      likes: sauce.liked,
+      likes: sauce.likes,
       dislikes: sauce.dislikes,
       usersLiked: sauce.usersLiked, 
       usersDisliked: sauce.usersDisliked
@@ -172,7 +183,6 @@ exports.likeSauce = async (req, res) => {
     await Sauce.updateOne({ _id: req.params.id }, userNote);
     return res.status(httpStatus.OK).json({ message: 'Sauce noted!' });
   } catch (error) {
-    console.log(error);
     return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: error?.message });
   }
 }
