@@ -24,7 +24,7 @@ exports.getAllSauces = async (req, res) => {
  */
 
 exports.postSauce = async (req, res) => {
-  const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+  const imageUrl = req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : null;
   try {
     const sauceObject = JSON.parse(req.body.sauce); //req.body.sauce
     delete sauceObject._id;
@@ -77,11 +77,11 @@ exports.getOneSauce = async (req, res) => {
  */
 
 exports.updateSauce = async (req, res) => {
-  const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
+  const newImageUrl = req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : null;
   try {
     const sauceObject = req.file ? {
       ...JSON.parse(req.body.sauce),
-      imageUrl
+      imageUrl: newImageUrl
     } : {
       ...req.body
     }
@@ -134,6 +134,10 @@ exports.deleteSauce = async (req, res) => {
 exports.likeSauce = async (req, res) => {
   try {
     const like = req.body.like;
+    if (req.auth.userId !== req.body.userId) {
+      console.log(req.auth.userId, ' ≠ ', req.body.userId);
+      throw new Error('L\'utisateur est introuvable');
+    }
     const sauce = await Sauce.findOne({ _id: req.params.id });
     if (!sauce) throw new Error('Cette sauce n\'existe pas!');
     
