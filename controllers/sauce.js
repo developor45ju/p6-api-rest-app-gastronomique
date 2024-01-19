@@ -11,6 +11,16 @@ const httpStatus = require('http-status');
 exports.getAllSauces = async (req, res) => {
   try {
     const getAllSauces = await Sauce.find();
+    /*
+    getAllSauces.forEach(sauce => {
+      console.log(sauce.imageUrl);
+      sauce.imageUrl = `${req.protocol}://${req.get('host')}/images/${
+        sauce.imageUrl
+      }`;
+    });
+    */
+    // monimage.jpg
+    // http://localhost:3000/images/monimage.jpg
     return res.status(httpStatus.OK).json(getAllSauces);
   } catch (error) {
     return res.status(httpStatus.BAD_REQUEST).json({ error })
@@ -46,10 +56,9 @@ exports.postSauce = async (req, res) => {
     if (req.file) {
       const imageFile = imageUrl.split('/images/')[1];
       fs.unlink(`images/${imageFile}`, () => {
-        console.log('Image not uploaded with success');
+        console.log('Image deleted with success');
       });
     }
-
 
     return res.status(httpStatus.BAD_REQUEST).json({ error });
   }
@@ -92,12 +101,11 @@ exports.updateSauce = async (req, res) => {
       fs.unlink(`images/${imageFile}`, (error) => {
         if (error) throw error;
       })
-      await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
-      return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
-    } else {
-      await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
-      return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
     }
+     
+    await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
+    return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
+    
   } catch (error) {
     if (req.file) {
       const imageFile = imageUrl.split('/images/')[1];
@@ -136,7 +144,7 @@ exports.likeSauce = async (req, res) => {
     const like = req.body.like;
     if (req.auth.userId !== req.body.userId) {
       console.log(req.auth.userId, ' ≠ ', req.body.userId);
-      throw new Error('L\'utisateur est introuvable');
+      throw new Error('Mauvais utilisateur');
     }
     const sauce = await Sauce.findOne({ _id: req.params.id });
     if (!sauce) throw new Error('Cette sauce n\'existe pas!');
