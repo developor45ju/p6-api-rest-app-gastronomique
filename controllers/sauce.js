@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const fs = require('node:fs');
 const Sauce = require('../models/Sauce');
 const httpStatus = require('http-status');
@@ -43,17 +41,16 @@ exports.postSauce = async (req, res) => {
       usersLiked: [],
       usersDisliked: [],
     });
-
+    
     await sauce.save();
 
     return res.status(httpStatus.CREATED).json({ message: 'Object created' });
   } catch (error) {
     if (req.file) {
-      fs.unlink(req.file.path, () => {
-        console.log('Image deleted with success');
+      fs.unlink(req.file.path, (error) => {
+        if (error) throw new Error('The image could not be deleted');
       });
     }
-    console.log(error)
     return res.status(httpStatus.BAD_REQUEST).json({ error: error?.message });
   }
 }
@@ -91,10 +88,10 @@ exports.updateSauce = async (req, res) => {
           ...req.body,
         };
     delete newSauce.userId;
-    await Sauce.findOne({ _id: req.params.id });
+    const oldSauce = await Sauce.findOne({ _id: req.params.id });
     if (req.file) {
-      fs.unlink(req.file.path, (error) => {
-        if (error) throw error;
+      fs.unlink(`${process.env.FOLDER_IMAGES}/${oldSauce.imageUrl}`, (error) => {
+        if (error) throw new Error('The image could not be deleted');
       });
     }
      
@@ -103,8 +100,8 @@ exports.updateSauce = async (req, res) => {
     
   } catch (error) {
     if (req.file) {
-      fs.unlink(req.file.path, () => {
-        console.log('Image not uploaded with success');
+      fs.unlink(req.file.path, (error) => {
+        if (error) throw new Error('The image is not updated');
       });
     }
     return res.status(httpStatus.BAD_REQUEST).json({ error: error?.message });
@@ -123,7 +120,7 @@ exports.deleteSauce = async (req, res) => {
     if (!sauce) return res.status(httpStatus.NOT_FOUND).json({message: 'Cette sauce n\'existe pas'})
 
     fs.unlink(`${process.env.FOLDER_IMAGES}/${sauce.imageUrl}`, (error) => {
-      if (error) throw error;
+      if (error) throw new Error('The image could not be deleted');
     });
     await Sauce.deleteOne({ _id: req.params.id });
     return res.status(httpStatus.OK).json({ message: 'Delete successfully!' });
