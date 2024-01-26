@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const fs = require('node:fs');
 const Sauce = require('../models/Sauce');
 const httpStatus = require('http-status');
@@ -11,19 +13,13 @@ const httpStatus = require('http-status');
 exports.getAllSauces = async (req, res) => {
   try {
     const getAllSauces = await Sauce.find();
-    /*
+    
     getAllSauces.forEach(sauce => {
-      console.log(sauce.imageUrl);
-      sauce.imageUrl = `${req.protocol}://${req.get('host')}/images/${
-        sauce.imageUrl
-      }`;
+      sauce.imageUrl = `${req.protocol}://${req.get('host')}/${process.env.FOLDER_IMAGES}/${sauce.imageUrl}`;
     });
-    */
-    // monimage.jpg
-    // http://localhost:3000/images/monimage.jpg
     return res.status(httpStatus.OK).json(getAllSauces);
   } catch (error) {
-    return res.status(httpStatus.BAD_REQUEST).json({ error })
+    return res.status(httpStatus.BAD_REQUEST).json({ error: error?.message })
   }
 }
 
@@ -34,15 +30,14 @@ exports.getAllSauces = async (req, res) => {
  */
 
 exports.postSauce = async (req, res) => {
-  const imageUrl = req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : null;
   try {
-    const sauceObject = JSON.parse(req.body.sauce); //req.body.sauce
+    const sauceObject = JSON.parse(req.body.sauce);
     delete sauceObject._id;
     delete sauceObject.userId;
     const sauce = new Sauce({
       ...sauceObject,
       userId: req.auth.userId,
-      imageUrl,
+      imageUrl: req.file.filename,
       likes: 0,
       dislikes: 0,
       usersLiked: [],
@@ -54,13 +49,12 @@ exports.postSauce = async (req, res) => {
     return res.status(httpStatus.CREATED).json({ message: 'Object created' });
   } catch (error) {
     if (req.file) {
-      const imageFile = imageUrl.split('/images/')[1];
-      fs.unlink(`images/${imageFile}`, () => {
+      fs.unlink(req.file.path, () => {
         console.log('Image deleted with success');
       });
     }
-
-    return res.status(httpStatus.BAD_REQUEST).json({ error });
+    console.log(error)
+    return res.status(httpStatus.BAD_REQUEST).json({ error: error?.message });
   }
 }
 
@@ -73,9 +67,10 @@ exports.postSauce = async (req, res) => {
 exports.getOneSauce = async (req, res) => {
   try {
     const getOneSauce = await Sauce.findOne({ _id: req.params.id });
+    getOneSauce.imageUrl = `${req.protocol}://${req.get('host')}/${process.env.FOLDER_IMAGES}/${getOneSauce.imageUrl}`;
     return res.status(httpStatus.OK).json(getOneSauce);
   } catch (error) {
-    return res.status(httpStatus.NOT_FOUND).json({ error });
+    return res.status(httpStatus.NOT_FOUND).json({ error: error?.message });
   }
 }
 
@@ -86,34 +81,33 @@ exports.getOneSauce = async (req, res) => {
  */
 
 exports.updateSauce = async (req, res) => {
-  const newImageUrl = req.file ? `${req.protocol}://${req.get('host')}/images/${req.file.filename}` : null;
   try {
-    const sauceObject = req.file ? {
-      ...JSON.parse(req.body.sauce),
-      imageUrl: newImageUrl
-    } : {
-      ...req.body
-    }
-    delete sauceObject.userId;
-    const sauce = await Sauce.findOne({ _id: req.params.id });
+    const newSauce = req.file
+      ? {
+          ...JSON.parse(req.body.sauce),
+          imageUrl: req.file.filename,
+        }
+      : {
+          ...req.body,
+        };
+    delete newSauce.userId;
+    await Sauce.findOne({ _id: req.params.id });
     if (req.file) {
-      const imageFile = sauce.imageUrl.split('/images/')[1];
-      fs.unlink(`images/${imageFile}`, (error) => {
+      fs.unlink(req.file.path, (error) => {
         if (error) throw error;
-      })
+      });
     }
      
-    await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...sauceObject });
+    await Sauce.updateOne({ _id: req.params.id }, { _id: req.params.id, ...newSauce });
     return res.status(httpStatus.OK).json({ message : 'Sauce updated!' });  
     
   } catch (error) {
     if (req.file) {
-      const imageFile = imageUrl.split('/images/')[1];
-      fs.unlink(`images/${imageFile}`, () => {
+      fs.unlink(req.file.path, () => {
         console.log('Image not uploaded with success');
       });
     }
-    return res.status(httpStatus.BAD_REQUEST).json({ error });
+    return res.status(httpStatus.BAD_REQUEST).json({ error: error?.message });
   }
 }
 
@@ -128,14 +122,13 @@ exports.deleteSauce = async (req, res) => {
     const sauce = await Sauce.findOne({ _id: req.params.id });
     if (!sauce) return res.status(httpStatus.NOT_FOUND).json({message: 'Cette sauce n\'existe pas'})
 
-    const imageFile = sauce.imageUrl.split('/images/')[1];
-    fs.unlink(`images/${imageFile}`, (error) => {
+    fs.unlink(`${process.env.FOLDER_IMAGES}/${sauce.imageUrl}`, (error) => {
       if (error) throw error;
     });
     await Sauce.deleteOne({ _id: req.params.id });
     return res.status(httpStatus.OK).json({ message: 'Delete successfully!' });
   } catch (error) {
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error });
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: error?.message });
   }
 }
 

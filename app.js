@@ -23,17 +23,29 @@ mongoose
  * @param { Express.NextFunction } next
  */
 
+// const originsAllowed = ['https://piquante-j7q6.onrender.com', 'http://localhost:3000']
 
 app.use(express.json());
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Origin, Authorization, X-RequestWith, Content, Accept, Content-Type');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    next();
+  // if (originsAllowed.includes(req.headers('host'))) {
+  //   res.setHeader('Access-Control-Allow-Origin', req.headers('host'));
+  // }
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Origin, Authorization, X-RequestWith, Content, Accept, Content-Type'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, OPTIONS'
+  );
+  next();
 });
 
 app.use('/api/auth', userRoutes);
 app.use('/api/sauces', hotsauceRoutes);
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, process.env.FOLDER_IMAGES)));
 
 module.exports = app;
