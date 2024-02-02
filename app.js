@@ -4,6 +4,8 @@ const path = require('node:path');
 
 const express = require('express');
 const mongoose = require('mongoose');
+const limiter = require('express-rate-limit');
+const helmet = require('helmet');
 const app = express();
 
 const userRoutes = require('./routes/user.js');
@@ -25,12 +27,21 @@ mongoose
 
 // const originsAllowed = ['https://piquante-j7q6.onrender.com', 'http://localhost:3000']
 
+
+app.use(limiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+	limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+	standardHeaders: 'draft-7', // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
+	// store: ... , // Use an external store for consistency across multiple server instances.
+}));
 app.use(express.json());
 app.use((req, res, next) => {
   // if (originsAllowed.includes(req.headers('host'))) {
   //   res.setHeader('Access-Control-Allow-Origin', req.headers('host'));
   // }
 
+  app.use(helmet());
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   res.setHeader(
